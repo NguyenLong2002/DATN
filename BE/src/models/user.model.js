@@ -20,6 +20,10 @@ var userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
   phone: {
     type: String,
     default: null,
@@ -40,7 +44,7 @@ var userSchema = new mongoose.Schema({
   role_user: {
     type: String,
     default: "customer",
-    enum: ["admin", "staff", "customer"]
+    enum: ["admin", "customer"]
   },
   avatar: {
     type: String,
@@ -65,9 +69,10 @@ var userSchema = new mongoose.Schema({
   deleted_at: {
     type: Date,
     default: null
-  }
+  },
+  token: { type: String },
 }, {
-    timestamps: false,
+    timestamps: true,
     collection: COLLECTION_NAME
 });
 

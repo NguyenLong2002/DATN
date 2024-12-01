@@ -7,13 +7,16 @@ const  asyncHandler = require('../../helper/asyncHandler');
 const { authentication, authenticationV2 } = require('../../auth/authUtils');
 
 router.post('/signUp', asyncHandler(AccessController.signUp));
-router.post('/signIn', asyncHandler(AccessController.signIn));
+router.post('/login', asyncHandler(AccessController.signIn));
+
+router.get("/verify-email", asyncHandler(AccessController.verifyEmail));
+// router.get("/resend-verification-email", asyncHandler(AccessController.resendVerificationEmail));
 
 // authentication token
 router.use(authentication);
 router.use(authenticationV2);
 
-router.post('/logout', asyncHandler(AccessController.logOut));
+router.post('/logOut', asyncHandler(AccessController.logOut));
 router.post('/handleRefreshToken', asyncHandler(AccessController.handleRefreshToken));
 
 module.exports = router;

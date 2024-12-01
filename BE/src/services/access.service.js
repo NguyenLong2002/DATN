@@ -10,49 +10,62 @@ const {
   AuthFailureError,
   ForbiddenError,
 } = require("../core/error.response");
+const JWT = require('jsonwebtoken');
 const { findByEmail } = require("./user.service");
+const EmailService = require("./email.service");
 
 class AccessService {
   static signUp = async ({ name, email, password }) => {
+    
     try {
-      //step 1: check email exist
-      const holderShop = await UserModel.findOne({ email }).lean();
-      if (holderShop) {
-        throw new BadRequestError("Error: Shop already registered");
+      const existingUser = await UserModel.findOne({ email }).lean();
+      if (existingUser) {
+        throw new BadRequestError("Error: Email already registered");
       }
+      
+      // Mã hóa mật khẩu
+      const bcrypt = require("bcrypt");
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-      const passwordHash = await bcrypt.hash(password, 10);
-
+      // Tạo người dùng mới
       const newUser = await UserModel.create({
         name,
         email,
-        password: passwordHash,
+        password: hashedPassword,
       });
 
       if (newUser) {
-        //create privateKey, publicKey
+        // Tạo cặp khóa (public, private) cho JWT
         const { publicKey, privateKey } = generateDoubleKey();
-        const tokens = await createTokenPair({
-          publicKey,
-          privateKey,
-          payload: { user_id: newUser.id, email },
+        // const tokens = await createTokenPair({
+        //   publicKey,
+        //   privateKey,
+        //   payload: { user_id: newUser.id, email },
+        // });
+         const token = await JWT.sign({ user_id: newUser.id, email}, process.env.JWT_SECRET, {
+           expiresIn: '2 days'
+        });
+
+        // Gửi email xác nhận
+        const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+        await EmailService.sendVerificationEmail({
+          email,
+          name,
+          verificationLink,
         });
 
         return {
           code: 201,
           metadata: {
-            shop: getInfoData({
-              field: ["_id", "name", "email"],
-              object: newUser,
-            }),
-            tokens,
+            user: { id: newUser._id, name: newUser.name, email: newUser.email },
+            token,
           },
         };
       }
 
-      return {
-        code: 200,
-        metadata: null,
+       return {
+        code: 400,
+        message: "User creation failed",
       };
     } catch (error) {
       return {
@@ -62,6 +75,68 @@ class AccessService {
       };
     }
   };
+
+  static verifyEmail = async (token) => {
+    try {
+      // Giải mã token để lấy thông tin người dùng
+      const decoded = await JWT.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.user_id;
+
+      // Cập nhật trạng thái người dùng là đã xác nhận
+      const updatedUser = await UserModel.findByIdAndUpdate(userId, {
+        isEmailVerified: true,
+      }, { new: true });
+
+      if (!updatedUser) {
+        throw new Error("User not found");
+      }
+
+      return {
+        message: "Email verified successfully",
+        user: updatedUser,
+      };
+    } catch (error) {
+       if (error.name === "TokenExpiredError") {
+        throw new Error("Token has expired");
+        } else if (error.name === "JsonWebTokenError") {
+          throw new Error("Invalid token");
+        }
+        throw error;
+    }
+  };
+
+  static resendVerificationEmail = async (email) => {
+  // Kiểm tra xem email có tồn tại trong hệ thống không
+  const user = await UserModel.findOne({ email }).lean();
+  if (!user) {
+    throw new BadRequestError('Email not found in the system');
+  }
+
+  // Kiểm tra xem email đã được xác nhận chưa
+  if (user.isEmailVerified) {
+    throw new BadRequestError('Email is already verified');
+  }
+
+  // Tạo token mới
+  const token = await JWT.sign({ user_id: user._id, email }, process.env.JWT_SECRET, {
+    expiresIn: '2 days',
+  });
+
+  // Tạo link xác nhận email mới
+  const verificationLink = `${process.env.FRONTEND_URL}/verify?token=${token}`;
+
+  // Gửi email xác nhận
+  await EmailService.sendVerificationEmail({
+    email,
+    name: user.name,
+    verificationLink,
+  });
+
+  return {
+    message: 'Verification email resent successfully',
+    verificationLink,
+  };
+};
 
   /**
    *
@@ -73,52 +148,72 @@ class AccessService {
    * 5 - get data return login
    */
   static login = async ({ email, password, refreshToken = null }) => {
-    //1.
-    const foundShop = await findByEmail({ email });
-    if (!foundShop) throw new BadRequestError("Shop not registered");
-    //2.
-    const match = bcrypt.compare(password, foundShop.password);
-    if (!match) throw new AuthFailureError("Authentication Error");
-    //3.
+     // 1. Kiểm tra email có tồn tại không
+    const user = await UserModel.findOne({ email }).lean();
+    if (!user) throw new AuthFailureError("User not found");
+
+    // Kiểm tra trạng thái xác nhận email
+    if (!user.isEmailVerified) {
+      throw new AuthFailureError("Please verify your email before logging in");
+    }
+     // 2. So khớp mật khẩu
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) throw new AuthFailureError("Invalid password");
+
+    // 3. Tạo cặp khóa JWT và trả về token
     const { publicKey, privateKey } = generateDoubleKey();
-    //4.
     const tokens = await createTokenPair({
       publicKey,
       privateKey,
-      payload: { user_id: foundShop._id, email },
+      payload: { user_id: user._id, email },
     });
 
     await KeyTokenService.createKeyToken({
       privateKey,
       publicKey,
-      user_id: foundShop._id,
+      user_id: user._id,
       refreshToken: tokens.refreshToken,
     });
 
     return {
-      shop: getInfoData({ field: ["_id", "name", "email"], object: foundShop }),
+      user: getInfoData({ field: ["_id", "name", "email"], object: user }),
       tokens,
     };
   };
 
   static logout = async (keyStore) => {
-    return await KeyTokenService.removeKeyById(keyStore._id);
-  };
+    console.log("Logout initiated with keyStore:", keyStore);
+
+    if (keyStore.refreshToken) {
+        console.log("Updating refresh token status...");
+        await KeyTokenService.updateRefreshTokenStatus(keyStore.user._id, keyStore.refreshToken);
+    }
+
+    console.log("Removing key by ID:", keyStore._id);
+    const result = await KeyTokenService.removeKeyById(keyStore._id);
+
+    console.log("Key removal result:", result);
+    return result;
+};
+
+
 
   static handleRefreshTokenV2 = async ({ refreshToken, user, keyStore }) => {
     const { user_id, email } = user;
     console.log("//refresh", user_id, email)
+    // Kiểm tra refreshToken đã được sử dụng chưa
     if (keyStore.refreshTokenUsed.includes(refreshToken)) {
       await KeyTokenService.deleteKeyById(user_id);
-      throw new ForbiddenError("Something wrong happen!! Pls relogin");
+      throw new ForbiddenError("Session expired. Please login again.");
     }
 
     if (keyStore.refreshToken !== refreshToken)
-      throw new AuthFailureError("Shop not registered");
-    const foundShop = await findByEmail({ email });
-    if (!foundShop) throw new AuthFailureError("Shop not registered");
+    throw new AuthFailureError("Invalid refresh token");
 
-    //create new token
+    const updatedUser = await UserModel.findOne({ email }).lean();
+    if (!updatedUser) throw new AuthFailureError("User not found");
+
+     // Tạo mới cặp token
     const tokens = await createTokenPair({
       publicKey: keyStore.publicKey,
       privateKey: keyStore.privateKey,

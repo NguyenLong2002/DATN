@@ -2,9 +2,9 @@
 
 const STATUS_CODE = {
   OK: 200,
-  CREATED: 201,
-  UPDATED: 201,
-  DELETED: 201,
+  CREATED: 200,
+  UPDATED: 200,
+  DELETED: 200,
 };
 
 const RESPON_STATUS_CODE = {

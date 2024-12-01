@@ -1,11 +1,17 @@
 import PublicLayout from '../layouts/PublicLayout';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
-import SingInPage from '../features/auth/singIn';
-import SingUpPage from '../features/auth/singIn';
+import SignInPage from '../features/auth/signIn';
+import SignUpPage from '../features/auth/signUp';
 import AdminLayout from '../layouts/AdminLayout';
 import PublicLayoutUser from '../layouts/PublicLayoutUser';
 import NotFound from '../features/misc/NotFound';
 import Forbidden from '../features/misc/Forbidden';
+import ManageTour from '../features/admin/manageTour';
+import MainBody from '../features/user/pages/index';
+import TourPage from '../features/user/pages/tourPage';
+import TourDetail from '../features/user/pages/tourDetail';
+import ContactPage from '../features/user/pages/contactPage';
+import VerifyEmail from '../components/shareCompt/verifyEmail';
 
 
 function RouterComponent() {
@@ -16,8 +22,20 @@ function RouterComponent() {
       children: [
         {
           index: true,
-          element: <>Main Page</>
+          element: <MainBody />
         },
+        {
+          path:"/tours",
+          element: <TourPage />
+        },
+        {
+          path:"/tours/tour-detail",
+          element: <TourDetail />
+        },
+        {
+          path:"/contact",
+          element: <ContactPage />
+        }
       ]
     },
     {
@@ -26,11 +44,11 @@ function RouterComponent() {
       children: [
         {
           index: true,
-          element: <SingInPage />
+          element: <SignInPage />
         },
         {
-          path: "sing-up",
-          element: <SingUpPage />,
+          path: "sign-up",
+          element: <SignUpPage />,
         },
       ]
     },
@@ -39,12 +57,16 @@ function RouterComponent() {
       element: <AdminLayout />,
       children: [
         {
-          index: true,
+          index: false,
           element: <>Layout admin page</>
         },
         {
           path: "manage-users",
           element: <>Manage user</>
+        },
+        {
+          path: "manage-tour",
+          element: <ManageTour />
         },
       ]
     },
@@ -55,7 +77,11 @@ function RouterComponent() {
     {
       path: "*",
       element: <NotFound />
-    }
+    },
+    {
+      path: "/verify-email",
+      element: <VerifyEmail />
+    },
   ]);
 
   return (

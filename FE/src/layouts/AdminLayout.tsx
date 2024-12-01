@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Layout } from "antd";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { isUserLoggedIn, getToken } from "../utils/index";
-import SideBar from "../components/sideBarComponent";
-import NavbarComponent from "../components/navbarComponent";
+// import SideBar from "../components/sideBarComponent";
+import SideBar from "../components/shareCompt/SideBar"
 import { fetchUserInfo } from '../store/user';
 import { useAppDispatch, useAppSelector } from '../store/index';
 
@@ -27,16 +27,14 @@ const AdminLayout: React.FC = () => {
     }
   }, [userInfo.role_user])
 
-  if (!isUserLoggedIn()) {
-    return <Navigate to="/login" />;
-  }
+  // if (!isUserLoggedIn()) {
+  //   return <Navigate to="/login" />;
+  // }
 
   return (
     <Layout className="layout__admin-private">
-      <SideBar collapsed={collapsed} setCollapsed={setCollapsed}/>
-      <NavbarComponent collapsed={collapsed} setCollapsed={setCollapsed}>
+      <SideBar />
         <Outlet />
-      </NavbarComponent>
     </Layout>
   );
 };

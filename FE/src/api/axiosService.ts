@@ -17,13 +17,13 @@ const axiosService = axios.create({
 axiosService.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
 	const accessToken = authUtil.getToken();
 	const user = authUtil.getUser();
-
+console.log(user);
 	if (accessToken) {
 		config.headers[HEADER.AUTHORIZATION] = `${accessToken}`;
 	}
 
-	if (user && user?.id) {
-		config.headers[HEADER.CLIENT_ID] = `${user?.id}`;
+	if (user && user?._id) {
+		config.headers[HEADER.CLIENT_ID] = `${user?._id}`;
 	}
 
 	return config;

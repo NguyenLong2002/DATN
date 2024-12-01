@@ -1,4 +1,4 @@
-import SingUp from "./singUp";
+import SingUp from "./signUp";
 import styled from "./index.module.scss";
 
 const Login = () => {

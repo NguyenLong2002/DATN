@@ -6,11 +6,12 @@ const authApi = {
         const url = '/';
         return axiosService.get(url);
     },
-    singUp(data: formDataSingUp): Promise<responseSingUp> {
-        const url = '/v1/api/access/signup';
+    signUp(data: formDataSignUp): Promise<responseSignUp> {
+        console.log(data);
+        const url = '/v1/api/access/signUp';
         return axiosService.post(url, data);
     },
-    login(body: formDataSingIn): Promise<responseToken> {
+    login(body: formDataSignIn): Promise<responseToken> {
         const url = '/v1/api/access/login';
         return axiosService.post(url, body);
     },
@@ -26,6 +27,11 @@ const authApi = {
         const url = '/v1/api/access/login-provider';
         return axiosService.post(url, body);
     },
+    verifyEmail(token: string): Promise<void> {
+        const url = `/v1/api/access/verify-email?token=${token}`;
+        return axiosService.get(url);
+    },
+
 }
 
 export default authApi;

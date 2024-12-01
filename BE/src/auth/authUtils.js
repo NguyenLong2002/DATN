@@ -13,7 +13,7 @@ const createTokenPair = async ({payload, publicKey, privateKey}) => {
         });
 
         const refreshToken = await JWT.sign(payload, privateKey, {
-            expiresIn: '2 days'
+            expiresIn: '3 days'
         });
 
         JWT.verify(accessToken, publicKey, (err, decode) => {
@@ -39,9 +39,9 @@ const authentication = asyncHandler(async (req, res, next) => {
      * 5 - check keyStore with this userId
      * 6 - return next
     */
-
     //1.
     const user_id = req.headers[HEADER.CLIENT_ID];
+    console.log("user_id", user_id)
     if(!user_id) throw new AuthFailureError('Invalid Request!');
 
     //2.
@@ -54,6 +54,7 @@ const authentication = asyncHandler(async (req, res, next) => {
 
     try {
         const decodeUser = JWT.verify(accessToken, keyStore.publicKey);
+        console.log(decodeUser);
         if(user_id !== decodeUser.user_id) throw new AuthFailureError('Invalid user_id');
 
         req.keyStore = keyStore;

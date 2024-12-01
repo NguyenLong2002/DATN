@@ -41,7 +41,7 @@ interface resize {
 
 interface UserState {
     id: number,
-    fullName: string,
+    name: string,
     email: string,
     address: string,
     dateOfBirth: string,
@@ -56,15 +56,15 @@ interface UserState {
     update_date
 }
 
-interface formDataSingUp {
-    fullName: string,
+interface formDataSignUp {
+    name: string,
     email: string,
     password: string,
     re_password: string,
     is_active?: '0' | '1',
 }
 
-interface formDataSingIn {
+interface formDataSignIn {
     email: string,
     password: string,
 }
@@ -74,12 +74,12 @@ interface responseTokenToken {
     refreshToken: string,
 }
 
-interface responseSingUp extends baseInstance {
-    metadata: responseMetadataSingUp
+interface responseSignUp extends baseInstance {
+    metadata: responseMetadataSignUp
 }
 
-interface responseMetadataSingUp {
-    user: responseUserSingUp
+interface responseMetadataSignUp {
+    user: responseUserSignUp
 }
 
 interface responseToken extends baseInstance {

@@ -1,9 +1,11 @@
 import { getToken } from '../utils/index'
 import { Outlet } from 'react-router-dom'
-import { useEffect, lazy, Suspense } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useAppDispatch } from '../store'
 import { fetchUserInfo } from '../store/user'
-import { Skeleton } from 'antd'
+// import { Skeleton } from 'antd'
+import Navbar from '../components/shareCompt/navbar'
+import Footer from '../components/shareCompt/Footer'
 
 const PublicLayoutUser = () => {
   const dispatch = useAppDispatch()
@@ -13,16 +15,14 @@ const PublicLayoutUser = () => {
     if (token) {
       dispatch(fetchUserInfo())
     }
-  }, [])
+  }, [dispatch])
 
   return (
-    <>
-      <div>header layout</div>
+    <div>
+      <Navbar />
       <Outlet />
-      <Suspense fallback={<Skeleton />}>
-        <div>footer layout</div>
-      </Suspense>
-    </>
+      <Footer />
+    </div>
   )
 }
 

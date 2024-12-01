@@ -35,6 +35,18 @@ class TokenService {
     static findByRefreshToken = async ( refreshToken ) => {
         return await keyTokenModel.findOne({ refreshToken });
     }
+    // Trong TokenService
+    static updateRefreshTokenStatus = async (user_id, refreshToken) => {
+        try {
+            await keyTokenModel.updateOne(
+                { user_id: convertObjectId(user_id) },
+                { $pull: { refreshTokenUsed: refreshToken }, $set: { refreshToken: null } }
+            );
+        } catch (error) {
+            throw error;
+        }
+    };
+
 }
 
 module.exports = TokenService;

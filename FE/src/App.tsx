@@ -1,11 +1,11 @@
 import RouterComponent from "./routers/index";
 import { store } from "./store/index";
 import { Provider } from "react-redux";
-import "@/assets/styles/index.css";
+// import "@/assets/styles/index.css";
 
 function App() {
   return (
-    <div className="root_component">
+    <div className="root_component w-full">
       <Provider store={store}>
         <RouterComponent />
       </Provider>

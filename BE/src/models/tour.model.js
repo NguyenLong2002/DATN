@@ -46,7 +46,7 @@ var tourSchema = new mongoose.Schema(
       default: null,
     },
     map: {
-      type: varchar,
+      type: String,
       default: null,
     },
     quantity: {
@@ -54,11 +54,11 @@ var tourSchema = new mongoose.Schema(
       default: null,
       required: true,
     },
-    group_id: {
-      type: Schema.Types.ObjectId,
-      required: true,
-      ref: "GroupTour",
-    },
+    // group_id: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   required: true,
+    //   ref: "GroupTour",
+    // },
     created_at: {
       type: Date,
       default: Date.now,
